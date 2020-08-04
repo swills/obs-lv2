@@ -32,12 +32,19 @@ LV2Plugin::LV2Plugin(void)
 
 	feature_data_access = { LV2_DATA_ACCESS_URI, &feature_data_access_data };
 
+	feature_worker = { LV2_WORKER__schedule, &feature_worker_schedule };
+	feature_bufsize = { LV2_BUF_SIZE__boundedBlockLength };
+	feature_options = { LV2_OPTIONS__options , &feature_options_option };
+
 	features[0] = &feature_uri_map;
 	/* XXX: don't expose it, crashes some plugins */
 	/* features[1] = &feature_uri_unmap; */
 	features[1] = &feature_instance_access;
 	features[2] = &feature_data_access;
-	features[3] = nullptr; /* NULL terminated */
+	features[3] = &feature_worker;
+	features[4] = &feature_bufsize;
+	features[5] = &feature_options;
+	features[6] = nullptr; /* NULL terminated */
 
 	world = lilv_world_new();
 	lilv_world_load_all(world);
@@ -72,8 +79,12 @@ bool LV2Plugin::is_feature_supported(const LilvNode* node)
 	auto node_uri = lilv_node_as_uri(node);
 
 	for (auto feature = this->features; *feature != nullptr; feature++) {
-		if (0 == strcmp((*feature)->URI, node_uri))
+		if (0 == strcmp((*feature)->URI, node_uri)) {
 			is_supported = true;
+		} else {
+			printf("feature: %s uri: %s\n",
+			       (*feature)->URI, node_uri);
+		}
 	}
 
 	return is_supported;
@@ -129,6 +140,8 @@ void LV2Plugin::populate_supported_plugins(void)
 		LILV_FOREACH(nodes, j, req_features) {
 			const LilvNode* feature = lilv_nodes_get(req_features, j);
 
+			printf("Checking for supported features for %s\n", lilv_node_as_string(lilv_plugin_get_name(plugin)));
+			printf("features: %s\n", lilv_node_as_string(feature));
 			if (!this->is_feature_supported(feature)) {
 				skip = true;
 				printf("%s filtered out because we do not support %s\n",
@@ -276,6 +289,10 @@ void LV2Plugin::update_plugin_instance(void)
 
 	/* XXX: digging in lilv's internals, there may be a better way to do this */
 	this->feature_data_access_data.data_access = this->plugin_instance->lv2_descriptor->extension_data;
+	/* this->feature_options_option.context = LV2_OPTIONS_INSTANCE; */
+	/* this->feature_options_option.key = instance_data.key; */
+	/* this->feature_options_option.type = ; */
+	/* this->feature_options_option.value = ; */
 
 	this->prepare_ports();
 

@@ -25,6 +25,9 @@
 #include <lv2/state/state.h>
 #include <lv2/instance-access/instance-access.h>
 #include <lv2/data-access/data-access.h>
+#include <lv2/worker/worker.h>
+#include <lv2/buf-size/buf-size.h>
+#include <lv2/options/options.h>
 #include <iostream>
 #include <functional>
 #include <stdio.h>
@@ -181,11 +184,16 @@ protected:
 
 	LV2_Extension_Data_Feature feature_data_access_data;
 	LV2_Feature feature_data_access;
+	LV2_Worker_Schedule feature_worker_schedule;
+	LV2_Feature feature_worker;
+	LV2_Feature feature_bufsize;
+	LV2_Options_Option feature_options_option;
+	LV2_Feature feature_options;
 
 	static LV2_URID urid_map(void *handle, const char *uri);
 	static const char *urid_unmap(void *handle, LV2_URID urid);
 
-	const LV2_Feature* features[4];
+	const LV2_Feature* features[7];
 
 	/* STATE PERSISTENCE */
 	static const void *get_port_value(const char *port_symbol,
